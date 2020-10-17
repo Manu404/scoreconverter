@@ -10,7 +10,7 @@ namespace ScoreConverter
 {
     public class ConversionJob
     {
-        private string[] desiredOutput = { ".png", ".spos", ".mpos" };
+        private string[] desiredOutput = { ".png", ".spos", ".mpos", ".svg", ".ogg", "metajson" };
 
         public string JobFilePath { get; set; }
         public List<ConversionJobFile> Files { get; set; }
