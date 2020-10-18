@@ -2,15 +2,16 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/0t8nlc820l0pt48v?svg=true)](https://ci.appveyor.com/project/Manu404/scoreconverter)
 
-
 A simple wrapper utility around musescore export job for future project
 
 Currently export png, svg, ogg, mpos, spos, metadatas and pack in a zip.
 
-Command line arguments:  
+## Command line arguments  
 
--s|--source => files to convert
--d|--destination => destination folder for output
--m|--ms => musescore executable path
---silent => no console output
--v|--verbose =>  verbose output
+|    |               | Description               |
+|----|---------------|---------------------------|
+| -s | --source      | files to convert          |
+| -d | --destination | destination folder        |
+| -m | --ms          | musescore executable path |
+|    | --silent      | no console output         |
+| -v | --verbose     | verbose output            |
