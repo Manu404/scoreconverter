@@ -13,30 +13,16 @@ namespace ScoreConverter
             Parser.Default.ParseArguments<Options>(args)
                    .WithParsed<Options>(o =>
                    {
-                       ConversionJob job = new ConversionJob()
+                       IConsole console = new ConsoleWrapper(o.Silent);
+                       try
                        {
-                           Files = new List<ConversionJobFile>()
-                       };
-
-                       foreach(var source in o.Sources)
-                       {
-                           if (File.Exists(source))
-                               job.Files.Add(new ConversionJobFile()
-                               {
-                                   Name = Path.GetFileName(source),
-                                   NameWithoutExtension = Path.GetFileNameWithoutExtension(source),
-                                   FullPath = Path.GetFullPath(source),
-                                   Task = new List<ConversionJobTask>()
-                               });
+                           ConversionJob job = new ConversionJob(o.MusescorePath, o.Sources, o.Destination);
+                           job.Do();
                        }
-
-                       job.PrepareJsonJobFile();
-                       job.WriteJsonJob();
-                       job.ExecuteJob(o.MusescorePath);
-                       job.CreateArchives();
-                       job.Clean();
-
-                       Console.ReadKey();
+                       catch(Exception e)
+                       {
+                           Console.WriteLine(e.Message);
+                       }
                    });
         }
     }
