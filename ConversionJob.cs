@@ -100,7 +100,7 @@ namespace ScoreConverter
             while (!p.HasExited)
             {
                 System.Threading.Thread.Sleep(1000); // fine, as waiting for external process
-                Console.Write(".");
+                _console.Write(".");
                 i++;
             }
             _console.WriteLine($"\n{i} goblins died...");

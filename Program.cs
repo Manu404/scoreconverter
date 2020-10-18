@@ -16,7 +16,7 @@ namespace ScoreConverter
                        IConsole console = new ConsoleWrapper(o.Silent);
                        try
                        {
-                           ConversionJob job = new ConversionJob(o.MusescorePath, o.Sources, o.Destination);
+                           ConversionJob job = new ConversionJob(o.MusescorePath, o.Sources, o.Destination, console);
                            job.Do();
                        }
                        catch(Exception e)
