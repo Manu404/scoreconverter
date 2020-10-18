@@ -10,30 +10,33 @@ namespace ScoreConverter
 {
     public class ConversionJob
     {
-        private string _binPath;
-        private string[] _desiredOutput = { "png", "spos", "mpos", "svg", "ogg", "metajson" };
-        private IConsole _console;
+        private readonly string[] _desiredOutput = { "png", "spos", "mpos", "svg", "ogg", "metajson" };
+        private string _binPath { get; }
+        private IConsole _console { get; }
 
-        public string JobFilePath { get; set; }
-        public string WorkingDir { get; set; }
-        public string Destination { get; set; }
-        public List<ConversionJobFile> Files { get; set; }
+        private string _jsonJobFilePath { get; set; }
+        private string _workingDir { get; }
+        private string _destination { get; }
+        private List<ConversionJobFile> _files { get; }
 
         public ConversionJob(string binPath, IEnumerable<string> files, string destination, IConsole console)
         {
             _binPath = binPath;
             _console = console;
-            Destination = destination;
+            _workingDir = Path.Combine(Path.GetTempPath(), $"job_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
+            _jsonJobFilePath = Path.Combine(_workingDir, $"{Path.GetDirectoryName(_workingDir)}.json");
+
+            _destination = destination;
+            _files = new List<ConversionJobFile>();
             BuildFileList(files);            
         }
 
         private void BuildFileList(IEnumerable<string> files)
-        {
-            Files = new List<ConversionJobFile>();
+        {            
             foreach (var source in files)
             {
                 if (File.Exists(source))
-                    Files.Add(new ConversionJobFile()
+                    _files.Add(new ConversionJobFile()
                     {
                         Name = Path.GetFileName(source),
                         NameWithoutExtension = Path.GetFileNameWithoutExtension(source),
@@ -56,18 +59,17 @@ namespace ScoreConverter
 
         private void CreateTempWorkingDir()
         {
-            WorkingDir = Path.Combine(Path.GetTempPath(), $"job_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
-            if (Directory.Exists(WorkingDir))
-                Directory.Delete(WorkingDir, true);
+            if (Directory.Exists(_workingDir))
+                Directory.Delete(_workingDir, true);
             else
-                Directory.CreateDirectory(WorkingDir);
+                Directory.CreateDirectory(_workingDir);
         }
 
         private void Clean()
         {
-            if(File.Exists(JobFilePath))
-                File.Delete(JobFilePath);
-            foreach (var file in Files)
+            if(File.Exists(_jsonJobFilePath))
+                File.Delete(_jsonJobFilePath);
+            foreach (var file in _files)
                 if(File.Exists(file.WorkingDir))
                 Directory.Delete(file.WorkingDir, true);
             _console.WriteLine("We cleaned everything.");
@@ -76,9 +78,9 @@ namespace ScoreConverter
         private void CreateArchives()
         {
             _console.WriteLine("Your files will now be packed in zip by the elves, it's a fine art...");
-            foreach (var file in Files)
+            foreach (var file in _files)
             {
-                string zipPath = Path.Combine(this.Destination, Path.GetFileName(Path.ChangeExtension(file.FullPath, ".zip")));
+                string zipPath = Path.Combine(this._destination, Path.GetFileName(Path.ChangeExtension(file.FullPath, ".zip")));
                 if (File.Exists(zipPath)) File.Delete(zipPath);
                 ZipFile.CreateFromDirectory(file.WorkingDir, zipPath);
             }
@@ -93,7 +95,7 @@ namespace ScoreConverter
                 return false;
             }
             ProcessStartInfo startInfo = new ProcessStartInfo(_binPath);
-            startInfo.Arguments = $"-j {JobFilePath}";
+            startInfo.Arguments = $"-j {_jsonJobFilePath}";
             var p = Process.Start(startInfo);
             _console.WriteLine("Your files had been sent to the goblins team, they're doing their best...");
             int i = 0;
@@ -110,7 +112,7 @@ namespace ScoreConverter
         private bool EnsureJobDone()
         {
             string missingOutput = String.Empty;
-            foreach(var file in this.Files)
+            foreach(var file in this._files)
             {
                 foreach(var task in file.Task)
                 {
@@ -131,16 +133,14 @@ namespace ScoreConverter
 
         private void WriteJsonJob()
         {
-            var tasks = Files.SelectMany(f => f.Task);
-            var jsonFileName = $"{Path.GetDirectoryName(WorkingDir)}.json";
+            var tasks = _files.SelectMany(f => f.Task);
             string json = JsonConvert.SerializeObject(tasks);
-            System.IO.File.WriteAllText(jsonFileName, json);
-            JobFilePath = Path.GetFullPath(jsonFileName);
+            System.IO.File.WriteAllText(_jsonJobFilePath, json);
         }
 
         private void PrepareJsonJobFile()
         {
-            Files.ForEach((f) => PrepareSingleFileForJob(f));
+            _files.ForEach((f) => PrepareSingleFileForJob(f));
         }
 
         private void PrepareSingleFileForJob(ConversionJobFile file)

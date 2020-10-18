@@ -2,7 +2,7 @@
   "profiles": {
     "ScoreConverter": {
       "commandName": "Project",
-      "commandLineArgs": "--source  ./TestFiles/bwv1001.mscx ./TestFiles/repeats.mscz --silent"
+      "commandLineArgs": "--source  ./TestFiles/bwv1001.mscx ./TestFiles/repeats.mscz"
     }
   }
 }
