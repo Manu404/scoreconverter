@@ -117,10 +117,10 @@ namespace ScoreConverter
             string missingOutput = String.Empty;
             foreach(var file in this._files)
             {
-                foreach(var task in file.Tasks)
+                foreach(var task in file.Tasks.SelectMany(t => t.Out))
                 {
-                    if (!File.Exists(task.Out))
-                        missingOutput += task.Out + '\n';
+                    if (!File.Exists(task))
+                        missingOutput += task + '\n';
                 }
             }
             if(String.IsNullOrEmpty(missingOutput))
@@ -155,24 +155,21 @@ namespace ScoreConverter
             file.WorkingDir = Path.Combine(_workingDir, file.NameWithoutExtension);
             Directory.CreateDirectory(file.WorkingDir);
 
-            foreach (var extension in _desiredOutput)
-            {
-                var output = Path.Combine(file.WorkingDir, Path.ChangeExtension(file.Name, extension));
-                file.Tasks.Add(new ConversionJobTask()
-                {
-                    In = file.FullPath,
-                    Out = output
-                });
+            var output = _desiredOutput.ToList().ConvertAll(o => Path.Combine(file.WorkingDir, Path.ChangeExtension(file.Name, o)));
 
-                file.Parts.Add(new ConversionPartJobTask()
-                {
-                    In = file.FullPath,
-                    Out = new string[,]
-                    {
-                        { $"{file.WorkingDir}\\{Path.GetFileNameWithoutExtension(file.Name)} (part for ", $").{extension}" }
-                    }
-                });
-            }
+            file.Tasks.Add(new ConversionJobTask()
+            {
+                In = file.FullPath,
+                Out = output.ToArray()
+            });
+
+            var parts = _desiredOutput.ToList().ConvertAll(o => new string[] { $"{file.WorkingDir}\\{Path.GetFileNameWithoutExtension(file.Name)} (part for ", $").{o}" } ).ToArray();
+
+            file.Parts.Add(new ConversionPartJobTask()
+            {
+                In = file.FullPath,
+                Out = parts
+            });
         }
     }
 }

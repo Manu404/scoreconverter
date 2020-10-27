@@ -8,7 +8,7 @@ namespace ScoreConverter
         public string In { get; set; }
 
         [JsonProperty("out")]
-        public string[,] Out { get; set; }
+        public string[][] Out { get; set; }
     }
 
     public class ConversionJobTask
@@ -17,6 +17,6 @@ namespace ScoreConverter
         public string In { get; set; }
 
         [JsonProperty("out")]
-        public string Out { get; set; }
+        public string[] Out { get; set; }
     }
 }
