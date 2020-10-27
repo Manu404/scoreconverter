@@ -4,7 +4,7 @@
 
 A simple wrapper utility around musescore export job for future project
 
-Currently export png, svg, ogg, mpos, spos, metadatas and pack in a zip.
+Currently export png, svg, ogg, mpos, spos, metadatas as well as individual parts of each score and pack in a zip.
 
 ## Command line arguments  
 
@@ -13,5 +13,6 @@ Currently export png, svg, ogg, mpos, spos, metadatas and pack in a zip.
 | -s | --source      | files to convert          |
 | -d | --destination | destination folder        |
 | -m | --ms          | musescore executable path |
+| -i | --interactive | no user confirmation      |
 |    | --silent      | no console output         |
 | -v | --verbose     | verbose output            |
