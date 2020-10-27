@@ -1,10 +1,12 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace ScoreConverter
 {
@@ -17,14 +19,16 @@ namespace ScoreConverter
         private string _jsonJobFilePath { get; set; }
         private string _workingDir { get; }
         private string _destination { get; }
+        private string _jobName { get; }
         private List<ConversionJobFile> _files { get; }
 
         public ConversionJob(string binPath, IEnumerable<string> files, string destination, IConsole console)
         {
             _binPath = binPath;
             _console = console;
-            _workingDir = Path.Combine(Path.GetTempPath(), $"job_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
-            _jsonJobFilePath = Path.Combine(_workingDir, $"{Path.GetDirectoryName(_workingDir)}.json");
+            _jobName = $"job_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+            _workingDir = Path.Combine(Path.GetTempPath(), _jobName);
+            _jsonJobFilePath = Path.Combine(_workingDir, $"{_jobName}.json");
 
             _destination = destination;
             _files = new List<ConversionJobFile>();
@@ -41,7 +45,7 @@ namespace ScoreConverter
                         Name = Path.GetFileName(source),
                         NameWithoutExtension = Path.GetFileNameWithoutExtension(source),
                         FullPath = Path.GetFullPath(source),
-                        Task = new List<ConversionJobTask>()
+                        Tasks = new List<ConversionJobTask>()
                     });
             }
         }
@@ -54,7 +58,7 @@ namespace ScoreConverter
             {
                 CreateArchives();
             }
-            Clean();
+            //Clean();
         }
 
         private void CreateTempWorkingDir()
@@ -67,8 +71,8 @@ namespace ScoreConverter
 
         private void Clean()
         {
-            if(File.Exists(_jsonJobFilePath))
-                File.Delete(_jsonJobFilePath);
+            //if(File.Exists(_jsonJobFilePath))
+            //    File.Delete(_jsonJobFilePath);
             foreach (var file in _files)
                 if(File.Exists(file.WorkingDir))
                 Directory.Delete(file.WorkingDir, true);
@@ -114,7 +118,7 @@ namespace ScoreConverter
             string missingOutput = String.Empty;
             foreach(var file in this._files)
             {
-                foreach(var task in file.Task)
+                foreach(var task in file.Tasks)
                 {
                     if (!File.Exists(task.Out))
                         missingOutput += task.Out + '\n';
@@ -133,9 +137,13 @@ namespace ScoreConverter
 
         private void WriteJsonJob()
         {
-            var tasks = _files.SelectMany(f => f.Task);
-            string json = JsonConvert.SerializeObject(tasks);
-            System.IO.File.WriteAllText(_jsonJobFilePath, json);
+            var tasks = _files.SelectMany(f => f.Tasks);
+            var parts = _files.SelectMany(f => f.Parts);
+            string jsonTasks = JsonConvert.SerializeObject(tasks);
+            string jsonParts = JsonConvert.SerializeObject(parts);
+            var result = String.Join(',', new [] {jsonTasks.Remove(jsonTasks.Length - 1), jsonParts.Remove(0, 1)});
+
+            System.IO.File.WriteAllText(_jsonJobFilePath, result);
         }
 
         private void PrepareJsonJobFile()
@@ -145,17 +153,26 @@ namespace ScoreConverter
 
         private void PrepareSingleFileForJob(ConversionJobFile file)
         {
-            file.WorkingDir = Path.Combine(Path.GetDirectoryName(file.FullPath), file.NameWithoutExtension);
+            file.WorkingDir = Path.Combine(_workingDir, file.NameWithoutExtension);
             Directory.CreateDirectory(file.WorkingDir);
 
             foreach (var extension in _desiredOutput)
             {
                 var output = Path.Combine(file.WorkingDir, Path.ChangeExtension(file.Name, extension));
-                file.Task.Add(new ConversionJobTask()
+                file.Tasks.Add(new ConversionJobTask()
                 {
                     In = file.FullPath,
                     Out = output
-                });                
+                });
+
+                file.Parts.Add(new ConversionPartJobTask()
+                {
+                    In = file.FullPath,
+                    Out = new string[,]
+                    {
+                        { $"{file.WorkingDir}\\{Path.GetFileNameWithoutExtension(file.Name)} (part for ", $").{extension}" }
+                    }
+                });
             }
         }
     }
