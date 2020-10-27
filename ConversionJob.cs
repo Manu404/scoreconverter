@@ -72,8 +72,8 @@ namespace ScoreConverter
         private void Clean()
         {
             foreach (var file in _files)
-                if(File.Exists(file.WorkingDir))
-                Directory.Delete(file.WorkingDir, true);
+                if(Directory.Exists(file.WorkingDir))
+                    Directory.Delete(file.WorkingDir, true);
             _console.WriteLine("We cleaned everything.");
         }
 
