@@ -58,7 +58,7 @@ namespace ScoreConverter
             {
                 CreateArchives();
             }
-            //Clean();
+            Clean();
         }
 
         private void CreateTempWorkingDir()
@@ -71,8 +71,6 @@ namespace ScoreConverter
 
         private void Clean()
         {
-            //if(File.Exists(_jsonJobFilePath))
-            //    File.Delete(_jsonJobFilePath);
             foreach (var file in _files)
                 if(File.Exists(file.WorkingDir))
                 Directory.Delete(file.WorkingDir, true);
