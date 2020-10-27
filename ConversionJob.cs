@@ -12,12 +12,13 @@ namespace ScoreConverter
 {
     public class ConversionJob
     {
-        private readonly string[] _desiredOutput = { "png", "spos", "mpos", "svg", "ogg", "metajson" };
+        private readonly string[] _desiredOutput = { "png", "spos", "mpos", "metajson" };
         private string _binPath { get; }
         private IConsole _console { get; }
 
         private string _jsonJobFilePath { get; set; }
         private string _workingDir { get; }
+        private string _tempDir { get; }
         private string _destination { get; }
         private string _jobName { get; }
         private List<ConversionJobFile> _files { get; }
@@ -27,7 +28,8 @@ namespace ScoreConverter
             _binPath = binPath;
             _console = console;
             _jobName = $"job_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-            _workingDir = Path.Combine(Path.GetTempPath(), _jobName);
+            _tempDir = Path.Combine(Path.GetTempPath(), "ScoreConverter");
+            _workingDir = Path.Combine(_tempDir, _jobName);
             _jsonJobFilePath = Path.Combine(_workingDir, $"{_jobName}.json");
 
             _destination = destination;
@@ -71,10 +73,9 @@ namespace ScoreConverter
 
         private void Clean()
         {
-            foreach (var file in _files)
-                if(Directory.Exists(file.WorkingDir))
-                    Directory.Delete(file.WorkingDir, true);
-            _console.WriteLine("We cleaned everything.");
+            if(Directory.Exists(_tempDir))
+                Directory.Delete(_tempDir, true);
+            _console.WriteLine("We cleaned everything, including previous failed jobs.");
         }
 
         private void CreateArchives()
@@ -141,7 +142,7 @@ namespace ScoreConverter
             string jsonParts = JsonConvert.SerializeObject(parts);
             var result = String.Join(',', new [] {jsonTasks.Remove(jsonTasks.Length - 1), jsonParts.Remove(0, 1)});
 
-            System.IO.File.WriteAllText(_jsonJobFilePath, result);
+             System.IO.File.WriteAllText(_jsonJobFilePath, result);
         }
 
         private void PrepareJsonJobFile()
