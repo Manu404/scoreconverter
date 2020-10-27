@@ -13,7 +13,7 @@ namespace ScoreConverter
             Parser.Default.ParseArguments<Options>(args)
                    .WithParsed<Options>(o =>
                    {
-                       IConsole console = new ConsoleWrapper(o.Silent);
+                       IConsole console = new ConsoleWrapper(o.Interactive, o.Silent);
                        try
                        {
                            ConversionJob job = new ConversionJob(o.MusescorePath, o.Sources, o.Destination, console);

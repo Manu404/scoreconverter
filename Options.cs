@@ -14,7 +14,10 @@ namespace ScoreConverter
         [Option('m', "ms", Required = false, HelpText = "Path to your musescore executable.", Default = "C:\\Program Files\\MuseScore 3\\bin\\MuseScore3.exe")]
         public string MusescorePath { get; set; }
 
-        [Option("silent", Required = false, HelpText = "Don't output anything to the console and auto answer to yes.")]
+        [Option('i', "interactive", Required = true, HelpText = "Ask user confirmations.")]
+        public bool Interactive { get; set; }
+
+        [Option("silent", Required = false, HelpText = "No console ouput.")]
         public bool Silent { get; set; }
 
         [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]

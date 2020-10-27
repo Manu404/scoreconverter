@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ScoreConverter
 {    
@@ -13,27 +11,29 @@ namespace ScoreConverter
 
     public class ConsoleWrapper : IConsole
     {
-        private bool silent;
-        public ConsoleWrapper(bool silent)
+        private bool _interactive;
+        private bool _silent;
+        public ConsoleWrapper(bool interactive, bool silent)
         {
-            this.silent = silent;
+            _interactive = interactive;
+            _silent = silent;
         }
 
         public void WriteLine(string line)
         {
-            if (silent) return;
+            if (_silent) return;
             Console.WriteLine(line);
         }
 
         public void Write(string line)
         {
-            if (silent) return;
+            if (_silent) return;
             Console.Write(line);
         }
 
         public bool ConfirmChoice()
         {
-            if (silent) return true;
+            if (!_interactive) return true;
             return Console.ReadKey().Key.ToString().ToLower() == "y";
         }
     }
